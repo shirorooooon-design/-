@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Habit Quest - 習慣化RPG</title>
+    <!-- Pixel Font & Confetti Library -->
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=DotGothic16&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        :root[data-theme="dark"] {
+            --bg-color: #12101e;
+            --card-bg: #1d1a2f;
+            --card-inner: #27233d;
+            --primary-purple: #7042a6;
+            --accent-purple: #9d50ff;
+            --text-color: #e2e1e8;
+            --text-dim: #8b88a2;
+            --gold-color: #ffd700;
+            --green-color: #4cd964;
+            --border-color: #2e2a4a;
+        }
+
+        :root[data-theme="light"] {
+            --bg-color: #f4f3f8;
+            --card-bg: #ffffff;
+            --card-inner: #ecebf5;
+            --primary-purple: #7042a6;
+            --accent-purple: #8235e8;
+            --text-color: #2b283d;
+            --text-dim: #6e6b82;
+            --gold-color: #d4af37;
+            --green-color: #2ecc71;
+            --border-color: #d8d5e8;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'DotGothic16', sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding-bottom: 75px;
+            display: flex;
+            justify-content: center;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background-color: var(--bg-color);
+            position: relative;
+        }
+
+        /* Header / User Status */
+        .status-header {
+            background-color: var(--card-bg);
+            padding: 16px;
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .avatar-box {
+            width: 48px;
+            height: 48px;
+            background-color: var(--card-inner);
+            border: 2px solid var(--accent-purple);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+        }
+
+        .user-stats {
+            flex: 1;
+        }
+
+        .level-badge {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 11px;
+            color: var(--gold-color);
+            margin-bottom: 4px;
+        }
+
+        .bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .progress-bar-bg {
+            height: 8px;
+            background-color: var(--card-inner);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 2px;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #7042a6, #9d50ff);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .currency-display {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 11px;
+            color: var(--gold-color);
+            background: rgba(255, 215, 0, 0.1);
+            padding: 6px 10px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+
+        /* Pages System */
+        .page {
+            display: none;
+            padding: 16px;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Quest / Habit Cards */
+        .date-strip {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            background-color: var(--card-bg);
+            padding: 8px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .date-item {
+            text-align: center;
+            padding: 6px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .date-item.today {
+            background-color: var(--accent-purple);
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .quest-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--border-color);
+        }
+
+        .quest-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .quest-icon {
+            font-size: 22px;
+            width: 40px;
+            height: 40px;
+            background: var(--card-inner);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quest-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .quest-desc {
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .quest-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .check-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            border: 2px solid var(--accent-purple);
+            background: transparent;
+            color: transparent;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            transition: all 0.2s;
+        }
+
+        .check-btn.completed {
+            background: var(--green-color);
+            border-color: var(--green-color);
+            color: #fff;
+        }
+
+        .delete-btn {
+            background: transparent;
+            border: none;
+            color: #ff5252;
+            cursor: pointer;
+            font-size: 15px;
+            opacity: 0.6;
+        }
+
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            background-color: var(--accent-purple);
+            color: #fff;
+            border: none;
+            font-size: 26px;
+            box-shadow: 0 4px 12px rgba(157, 80, 255, 0.4);
+            cursor: pointer;
+            z-index: 20;
+        }
+        /* Statistics Screen */
+        .stats-tabs {
+            display: flex;
+            background: var(--card-bg);
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 8px 0;
+            text-align: center;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-size: 13px;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+
+        .tab-btn.active {
+            background: var(--accent-purple);
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .stats-box {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .week-header-row {
+            display: grid;
+            grid-template-columns: 140px repeat(7, 1fr);
+            gap: 4px;
+            margin-bottom: 8px;
+            text-align: center;
+            font-size: 11px;
+            color: var(--text-dim);
+        }
+
+        .habit-stat-row {
+            display: grid;
+            grid-template-columns: 140px repeat(7, 1fr);
+            gap: 4px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .habit-stat-name {
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-dot {
+            aspect-ratio: 1;
+            border-radius: 4px;
+            background-color: var(--card-inner);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+        }
+
+        .year-grid {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 3px;
+            margin-top: 6px;
+        }
+
+        .year-dot {
+            aspect-ratio: 1;
+            border-radius: 2px;
+            background-color: var(--card-inner);
+        }
+
+        .alltime-bar-container {
+            margin-bottom: 12px;
+        }
+        .alltime-bar-bg {
+            height: 12px;
+            background: var(--card-inner);
+            border-radius: 6px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+        .alltime-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+        }
+
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            padding: 12px 8px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--accent-purple);
+        }
+
+        .summary-label {
+            font-size: 10px;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        /* Modal Forms */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 16px;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            width: 100%;
+            max-width: 420px;
+            padding: 20px;
+            border: 1px solid var(--accent-purple);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-title {
+            font-size: 16px;
+            margin-bottom: 16px;
+            text-align: center;
+            color: var(--accent-purple);
+        }
+
+        .form-group {
+            margin-bottom: 12px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 10px;
+            background-color: var(--card-inner);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .dynamic-input-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+            margin-top: 4px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            background: var(--card-inner);
+            padding: 6px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-primary { background: var(--accent-purple); color: #fff; }
+        .btn-secondary { background: var(--card-inner); color: var(--text-dim); }
+        .btn-danger { background: #ff5252; color: #fff; }
+
+        /* Gacha & Collections */
+        .gacha-banner {
+            background: linear-gradient(135deg, var(--card-inner), var(--primary-purple));
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid var(--accent-purple);
+            margin-bottom: 16px;
+        }
+
+        .gacha-btn {
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            color: #000;
+            border: none;
+            padding: 12px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-top: 10px;
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3);
+        }
+
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+        }
+
+        .collection-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .collection-item.locked { opacity: 0.3; filter: grayscale(1); }
+        .collection-item .icon { font-size: 22px; }
+        .collection-item .name { font-size: 8px; margin-top: 2px; text-align: center; }
+
+        /* Setting Screen Controls */
+        .setting-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border-color);
+        }
+        .setting-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--accent-purple);
+            margin-bottom: 8px;
+        }
+
+        /* Bottom Fixed Nav */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 480px;
+            height: 60px;
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 50;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--text-dim);
+            background: none;
+            border: none;
+            font-size: 10px;
+            cursor: pointer;
+            gap: 2px;
+        }
+
+        .nav-item.active { color: var(--accent-purple); }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- Status Header -->
+        <div class="status-header">
+            <div class="user-info">
+                <div class="avatar-box">🧙‍♂️</div>
+                <div class="user-stats">
+                    <div class="level-badge" id="level-display">Lv.1</div>
+                    <div class="bar-label">
+                        <span>経験値</span>
+                        <span id="exp-text">0 / 20</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" id="exp-bar"></div>
+                    </div>
+                </div>
+                <div class="currency-display">
+                    💰 <span id="gold-display">0</span>G
+                </div>
+            </div>
+        </div>
+
+        <!-- Pages -->
+        <div id="page-quests" class="page active">
+            <div class="date-strip" id="date-strip"></div>
+            <div id="quest-list"></div>
+            <button class="fab" onclick="openQuestModal()">＋</button>
+        </div>
+
+        <div id="page-stats" class="page">
+            <div class="stats-tabs">
+                <button class="tab-btn" onclick="switchStatsTab('week')">週報</button>
+                <button class="tab-btn active" onclick="switchStatsTab('month')">月報</button>
+                <button class="tab-btn" onclick="switchStatsTab('year')">年報</button>
+                <button class="tab-btn" onclick="switchStatsTab('all')">全データ</button>
+            </div>
+            <div id="stats-content-area"></div>
+            <div class="summary-cards" id="stats-summary-cards"></div>
+        </div>
+
+        <div id="page-gacha" class="page">
+            <div class="gacha-banner">
+                <div style="font-size: 36px; margin-bottom: 6px;">🎁</div>
+                <h2 style="font-size: 16px;">ガチャ</h2>
+                <p style="font-size: 11px; color: var(--text-dim);">1回 100G で100種のコレクション獲得</p>
+                <button class="gacha-btn" onclick="drawGacha()">ガチャを引く (100G)</button>
+            </div>
+            <h3 style="font-size: 13px; margin-bottom: 10px;">収集図鑑 (<span id="collection-count">0</span>/100)</h3>
+            <div class="collection-grid" id="collection-grid"></div>
+        </div>
+
+        <div id="page-achievements" class="page">
+            <h3 style="font-size: 15px; margin-bottom: 12px; color: var(--accent-purple);">実績 (<span id="achievement-count">0</span>/50)</h3>
+            <div id="achievement-list"></div>
+        </div>
+
+        <div id="page-settings" class="page">
+            <div class="setting-section">
+                <div class="setting-title">🎨 外観設定</div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-size:13px;">ダーク / ライトモード</span>
+                    <button class="btn btn-primary" style="padding:6px 12px;" onclick="toggleTheme()">切り替え</button>
+                </div>
+            </div>
+            <div class="setting-section">
+                <div class="setting-title">🔄 データ初期化</div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                    <button class="btn btn-danger" onclick="resetCurrencyAndStats()">ゴールド・達成回数・進行をリセット</button>
+                    <button class="btn btn-danger" onclick="resetCollectionData()">収集図鑑をすべてリセット</button>
+                    <button class="btn btn-danger" onclick="resetAllDataCompletely()">アプリ全体の全データを初期化</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchPage('quests', this)">
+                <span style="font-size:18px;">📜</span><span>タスク</span>
+            </button>
+            <button class="nav-item" onclick="switchPage('stats', this)">
+                <span style="font-size:18px;">📊</span><span>統計</span>
+            </button>
+            <button class="nav-item" onclick="switchPage('gacha', this)">
+                <span style="font-size:18px;">💎</span><span>ガチャ</span>
+            </button>
+            <button class="nav-item" onclick="switchPage('achievements', this)">
+                <span style="font-size:18px;">🏆</span><span>実績</span>
+            </button>
+            <button class="nav-item" onclick="switchPage('settings', this)">
+                <span style="font-size:18px;">⚙️</span><span>設定</span>
+            </button>
+        </nav>
+
+        <!-- Quest Creation Modal -->
+        <div class="modal" id="quest-modal">
+            <div class="modal-content">
+                <div class="modal-title">習慣を作成</div>
+                <div class="form-group">
+                    <label>アイコン</label>
+                    <input type="text" id="input-icon" value="📖" maxlength="2" style="width: 50px; text-align: center;">
+                </div>
+                <div class="form-group">
+                    <label>習慣の名称</label>
+                    <input type="text" id="input-title" placeholder="例: 1時間集中して学習">
+                </div>
+                <div class="form-group">
+                    <label>説明・動機</label>
+                    <input type="text" id="input-desc" placeholder="例: 成長のために集中">
+                </div>
+                <div class="form-group">
+                    <label>打刻頻度</label>
+                    <select id="select-freq-type" onchange="handleFreqChange()">
+                        <option value="daily">毎日</option>
+                        <option value="weekly">毎週</option>
+                        <option value="days_per_week">週に X 日</option>
+                        <option value="days_per_month">月に X 日</option>
+                        <option value="every_x_days">X 日毎</option>
+                        <option value="specific_day">指定曜日のみ (複数選択)</option>
+                    </select>
+                    <div id="freq-dynamic-input" class="dynamic-input-row"></div>
+                </div>
+                <div class="form-group">
+                    <label>本日の目標 (タスククリア条件)</label>
+                    <div class="dynamic-input-row">
+                        <input type="number" id="input-daily-target" value="1" min="1" style="width: 80px;">
+                        <span style="align-self: center; font-size: 12px;">回 / 日</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>習慣のクリア（終了）条件</label>
+                    <select id="select-end-type" onchange="handleEndChange()">
+                        <option value="infinite">無期限</option>
+                        <option value="until_date">特定の日付まで (カレンダーから選択)</option>
+                        <option value="total_count">合計 X 回達成するまで</option>
+                    </select>
+                    <div id="end-dynamic-input" class="dynamic-input-row"></div>
+                </div>
+                <div class="modal-buttons">
+                    <button class="btn btn-secondary" onclick="closeQuestModal()">閉じる</button>
+                    <button class="btn btn-primary" onclick="saveQuest()">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const HABIT_COLORS = ['#ff5b84', '#ff9f43', '#feca57', '#1dd1a1', '#48dbfb', '#9c88ff'];
+        
+        // 収集要素 100種類の生成
+        const ITEM_ICONS = ['🗡️','🛡️','👕','🌿','🪄','💍','🪖','👟','⚔️','🐲','📜','👑','🍎','🍞','🧀','🍖','🧪','🔮','💎','📦','🧪','🧪','🕯️','🗝️','⛏️','🏹','🛡️','🔮','🧿','🏮','🧰','🧲','🧸','🎀','🎁','🎈','🧨','🔮','🪄','📜','🪙','💰','💵','💶','💷','💳','💎','⚖️','🧱','🛢️','⛽','🧭','🗿','🗽','🗼','🏰','🏯','🏟️','🎡','🎢','🎠','⛺','🌁','🏙️','🌆','🌅','🌌','🌠','🎇','🎆','🌇','🌆','🏙️','🌁','⛺','🪂','🛹','🏎️','🏍️','🛵','🚲','🛴','🛺','🚙','🚗','🚕','🚚','🚛','🚜','🏎️','🚒','🚑','🚐','🛻','🚚','⛵','🚤','🛥️','🛳️','🚢','🚀'];
+        const ITEMS = Array.from({ length: 100 }, (_, i) => {
+            const id = i + 1;
+            let rarity = 'N';
+            if (i >= 40) rarity = 'R';
+            if (i >= 75) rarity = 'SR';
+            if (i >= 95) rarity = 'SSR';
+            return {
+                id,
+                name: `収集アイテム #${id}`,
+                icon: ITEM_ICONS[i % ITEM_ICONS.length],
+                rarity
+            };
+        });
+
+        // 多彩なクリア条件とユーモア溢れる名前を持つ 50種類の実績
+        const ACHIEVEMENTS = [
+            { id: 'ach_1', title: '三日坊主の壁突破', desc: '初めての習慣を1つ達成', type: 'checks', target: 1, reward: 50, icon: '🌱' },
+            { id: 'ach_2', title: '目覚めし勇者', desc: 'レベル2に到達する', type: 'level', target: 2, reward: 60, icon: '⭐' },
+            { id: 'ach_3', title: '財布の紐が緩む音', desc: 'ガチャを1回引く', type: 'gacha', target: 1, reward: 40, icon: '👛' },
+            { id: 'ach_4', title: 'ルーキー卒業証書', desc: 'クエストを合計5回クリア', type: 'checks', target: 5, reward: 100, icon: '📜' },
+            { id: 'ach_5', title: '見習い収集マニア', desc: '図鑑アイテムを3個集める', type: 'collection', target: 3, reward: 80, icon: '🎒' },
+            { id: 'ach_6', title: '真面目っ子特急券', desc: 'レベル3に到達する', type: 'level', target: 3, reward: 90, icon: '🚀' },
+            { id: 'ach_7', title: 'コツコツの鬼・序章', desc: 'クエストを10回クリア', type: 'checks', target: 10, reward: 150, icon: '🔥' },
+            { id: 'ach_8', title: 'ガチャ中毒の入り口', desc: 'ガチャを5回引く', type: 'gacha', target: 5, reward: 120, icon: '🎰' },
+            { id: 'ach_9', title: '実績ハンター見習い', desc: '実績を3個解除する', type: 'achievements', target: 3, reward: 100, icon: '🏅' },
+            { id: 'ach_10', title: '中堅冒険者の仲間入り', desc: 'レベル5に到達する', type: 'level', target: 5, reward: 200, icon: '🛡️' },
+            { id: 'ach_11', title: '朝活の支配者', desc: 'クエストを15回クリア', type: 'checks', target: 15, reward: 180, icon: '🌅' },
+            { id: 'ach_12', title: '運試しは計画的に', desc: 'ガチャを10回引く', type: 'gacha', target: 10, reward: 200, icon: '🎯' },
+            { id: 'ach_13', title: 'コレクションの棚が賑やか', desc: '図鑑アイテムを10個集める', type: 'collection', target: 10, reward: 250, icon: '📦' },
+            { id: 'ach_14', title: '実績コンプの夢を見るな', desc: '実績を5個解除する', type: 'achievements', target: 5, reward: 150, icon: '💤' },
+            { id: 'ach_15', title: 'レベルアップの快感', desc: 'レベル7に到達する', type: 'level', target: 7, reward: 220, icon: '⚡' },
+            { id: 'ach_16', title: '鉄の意思を持つ凡人', desc: 'クエストを25回クリア', type: 'checks', target: 25, reward: 300, icon: '🤖' },
+            { id: 'ach_17', title: 'レア物ハンター', desc: '図鑑アイテムを15個集める', type: 'collection', target: 15, reward: 320, icon: '💎' },
+            { id: 'ach_18', title: '破産寸前のロマンチスト', desc: 'ガチャを15回引く', type: 'gacha', target: 15, reward: 300, icon: '💸' },
+            { id: 'ach_19', title: '中堅の壁を粉砕', desc: 'レベル10に到達する', type: 'level', target: 10, reward: 500, icon: '👑' },
+            { id: 'ach_20', title: '実績集めが本業', desc: '実績を10個解除する', type: 'achievements', target: 10, reward: 300, icon: '🏆' },
+            { id: 'ach_21', title: 'タスクの破壊神', desc: 'クエストを40回クリア', type: 'checks', target: 40, reward: 450, icon: '💥' },
+            { id: 'ach_22', title: '財宝の山に溺れる', desc: 'ガチャを20回引く', type: 'gacha', target: 20, reward: 400, icon: '🪙' },
+            { id: 'ach_23', title: '博物館でも作れそう', desc: '図鑑アイテムを25個集める', type: 'collection', target: 25, reward: 500, icon: '🏛️' },
+            { id: 'ach_24', title: 'ベテランの風格', desc: 'レベル13に到達する', type: 'level', target: 13, reward: 450, icon: '🧙' },
+            { id: 'ach_25', title: '実績コレクターの狂気', desc: '実績を15個解除する', type: 'achievements', target: 15, reward: 400, icon: '🤪' },
+            { id: 'ach_26', title: '習慣の魔導師', desc: 'クエストを60回クリア', type: 'checks', target: 60, reward: 600, icon: '🔮' },
+            { id: 'ach_27', title: '運命のガチャ回し', desc: 'ガチャを25回引く', type: 'gacha', target: 25, reward: 500, icon: '🔮' },
+            { id: 'ach_28', title: '全知全能への階段', desc: 'レベル16に到達する', type: 'level', target: 16, reward: 600, icon: '🌌' },
+            { id: 'ach_29', title: 'アイテムの母艦', desc: '図鑑アイテムを35個集める', type: 'collection', target: 35, reward: 700, icon: '🛸' },
+            { id: 'ach_30', title: '実績の山脈を踏破', desc: '実績を20個解除する', type: 'achievements', target: 20, reward: 550, icon: '⛰️' },
+            { id: 'ach_31', title: 'ライフハックの神', desc: 'クエストを80回クリア', type: 'checks', target: 80, reward: 800, icon: '👼' },
+            { id: 'ach_32', title: '底なしの財布', desc: 'ガチャを30回引く', type: 'gacha', target: 30, reward: 700, icon: '👜' },
+            { id: 'ach_33', title: '鬼神のレベルアップ', desc: 'レベル20に到達する', type: 'level', target: 20, reward: 1000, icon: '👹' },
+            { id: 'ach_34', title: '倉庫がパンク寸前', desc: '図鑑アイテムを45個集める', type: 'collection', target: 45, reward: 900, icon: '📦' },
+            { id: 'ach_35', title: '実績マニアの称号', desc: '実績を25個解除する', type: 'achievements', target: 25, reward: 750, icon: '🥇' },
+            { id: 'ach_36', title: '無敵のルーティンマシーン', desc: 'クエストを100回クリア', type: 'checks', target: 100, reward: 1200, icon: '🤖' },
+            { id: 'ach_37', title: 'ガチャの申し子', desc: 'ガチャを40回引く', type: 'gacha', target: 40, reward: 900, icon: '🍀' },
+            { id: 'ach_38', title: '限界突破の境地', desc: 'レベル25に到達する', type: 'level', target: 25, reward: 1200, icon: '🌟' },
+            { id: 'ach_39', title: 'コレクションの覇者', desc: '図鑑アイテムを60個集める', type: 'collection', target: 60, reward: 1200, icon: '👑' },
+            { id: 'ach_40', title: '実績の神に愛された者', desc: '実績を30個解除する', type: 'achievements', target: 30, reward: 1000, icon: '👑' },
+            { id: 'ach_41', title: 'タスク界のレジェンド', desc: 'クエストを130回クリア', type: 'checks', target: 130, reward: 1500, icon: '🦅' },
+            { id: 'ach_42', title: '破産覚悟のガチャ狂', desc: 'ガチャを50回引く', type: 'gacha', target: 50, reward: 1200, icon: '💸' },
+            { id: 'ach_43', title: '半世紀のレベル到達', desc: 'レベル35に到達する', type: 'level', target: 35, reward: 1800, icon: '🎖️' },
+            { id: 'ach_44', title: '世界を呑み込む収集欲', desc: '図鑑アイテムを75個集める', type: 'collection', target: 75, reward: 1800, icon: '🌍' },
+            { id: 'ach_45', title: '実績マスターへの道', desc: '実績を38個解除する', type: 'achievements', target: 38, reward: 1400, icon: '🛤️' },
+            { id: 'ach_46', title: '宇宙最強の習慣化', desc: 'クエストを170回クリア', type: 'checks', target: 170, reward: 2000, icon: '🛸' },
+            { id: 'ach_47', title: 'ガチャ神の降臨', desc: 'ガチャを65回引く', type: 'gacha', target: 65, reward: 1600, icon: '✨' },
+            { id: 'ach_48', title: '神域のレベル到達', desc: 'レベル45に到達する', type: 'level', target: 45, reward: 2500, icon: '⚡' },
+            { id: 'ach_49', title: '100分の一の奇跡', desc: '図鑑アイテムを90個集める', type: 'collection', target: 90, reward: 2500, icon: '🦄' },
+            { id: 'ach_50', title: '完全無欠の偉人', desc: '実績を50個すべて解除する', type: 'achievements', target: 50, reward: 5000, icon: '🏆' }
+        ];
+
+        let state = {
+            theme: 'dark',
+            level: 1,
+            exp: 0,
+            gold: 0,
+            quests: [],
+            logs: {},
+            inventory: [],
+            unlockedAchievements: [],
+            statsTab: 'month'
+        };
+
+        function init() {
+            loadState();
+            applyTheme(state.theme);
+            if (state.quests.length === 0) {
+                state.quests = [
+                    { id: 'q1', title: '時間通りに寝て起きる', desc: '自然のシステムに合わせて充電', icon: '⏰', color: HABIT_COLORS[0], freqType: 'daily', targetDaily: 1, endType: 'infinite' },
+                    { id: 'q2', title: '今日の水分摂取目標を達成', desc: '体を大切にする', icon: '🍺', color: HABIT_COLORS[1], freqType: 'daily', targetDaily: 1, endType: 'infinite' },
+                    { id: 'q3', title: '起床後にベッドを整える', desc: '爽やかな一日を始める', icon: '🧹', color: HABIT_COLORS[2], freqType: 'daily', targetDaily: 1, endType: 'infinite' }
+                ];
+                saveState();
+            }
+            renderHeader();
+            renderDateStrip();
+            renderQuests();
+            renderAchievements();
+            renderCollection();
+            renderStats();
+            handleFreqChange();
+            handleEndChange();
+        }
+
+        function saveState() {
+            localStorage.setItem('habit_quest_v3_state', JSON.stringify(state));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('habit_quest_v3_state');
+            if (saved) {
+                try { state = { ...state, ...JSON.parse(saved) }; } catch(e) {}
+            }
+        }
+
+        function toggleTheme() {
+            state.theme = state.theme === 'dark' ? 'light' : 'dark';
+            applyTheme(state.theme);
+            saveState();
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+        }
+
+        function getTodayStr() {
+            const now = new Date();
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
+        function addGold(amt) {
+            state.gold = Math.max(0, state.gold + amt);
+            renderHeader();
+            saveState();
+        }
+
+        function addExp(amt) {
+            state.exp += amt;
+            const maxExp = state.level * 20;
+            if (state.exp >= maxExp) {
+                state.exp -= maxExp;
+                state.level += 1;
+                addGold(50);
+                triggerConfetti();
+                alert(`LEVEL UP! Lv.${state.level} に到達！ (50G GET)`);
+            }
+            renderHeader();
+            checkAchievements();
+            saveState();
+        }
+        // --- ユーザー要求のリセット機能 ---
+        function resetCurrencyAndStats() {
+            if (confirm('ゴールド、現在の経験値・レベル、タスクの達成履歴をすべてリセットしますか？（習慣項目やコレクション図鑑は保持されます）')) {
+                state.gold = 0;
+                state.level = 1;
+                state.exp = 0;
+                state.logs = {};
+                renderHeader();
+                renderQuests();
+                renderStats();
+                checkAchievements();
+                saveState();
+                alert('ゴールド・達成履歴・レベルを初期化しました。');
+            }
+        }
+
+        function resetCollectionData() {
+            if (confirm('収集図鑑に獲得したアイテムをすべてリセットし、空っぽにしますか？')) {
+                state.inventory = [];
+                renderCollection();
+                checkAchievements();
+                saveState();
+                alert('収集図鑑を初期化しました。');
+            }
+        }
+
+        function resetAllDataCompletely() {
+            if (confirm('【警告】アプリケーションのすべてのデータ（習慣、履歴、図鑑、ゴールド、実績）を初期状態に完全リセットしますか？この操作は元に戻せません。')) {
+                localStorage.removeItem('habit_quest_v3_state');
+                location.reload();
+            }
+        }
+
+        function renderHeader() {
+            document.getElementById('level-display').innerText = `Lv.${state.level}`;
+            const maxExp = state.level * 20;
+            document.getElementById('exp-text').innerText = `${state.exp} / ${maxExp}`;
+            document.getElementById('exp-bar').style.width = `${Math.min(100, (state.exp / maxExp) * 100)}%`;
+            document.getElementById('gold-display').innerText = state.gold;
+        }
+
+        function switchPage(pageName, el) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(`page-${pageName}`).classList.add('active');
+            if (el) el.classList.add('active');
+            if (pageName === 'stats') renderStats();
+        }
+
+        function renderDateStrip() {
+            const container = document.getElementById('date-strip');
+            container.innerHTML = '';
+            const days = ['日', '月', '火', '水', '木', '金', '土'];
+            const today = new Date();
+
+            for (let i = -3; i <= 3; i++) {
+                const d = new Date();
+                d.setDate(today.getDate() + i);
+                const isToday = i === 0;
+                const div = document.createElement('div');
+                div.className = `date-item ${isToday ? 'today' : ''}`;
+                div.innerHTML = `<div>${days[d.getDay()]}</div><div>${d.getDate()}</div>`;
+                container.appendChild(div);
+            }
+        }
+
+        function renderQuests() {
+            const container = document.getElementById('quest-list');
+            container.innerHTML = '';
+            const todayStr = getTodayStr();
+            const todayLogs = state.logs[todayStr] || {};
+
+            state.quests.forEach(quest => {
+                const isCompleted = !!todayLogs[quest.id];
+                const card = document.createElement('div');
+                card.className = 'quest-card';
+                card.innerHTML = `
+                    <div class="quest-left">
+                        <div class="quest-icon" style="background:${quest.color}22">${quest.icon}</div>
+                        <div>
+                            <div class="quest-title">${quest.title}</div>
+                            <div class="quest-desc">${quest.desc || ''}</div>
+                        </div>
+                    </div>
+                    <div class="quest-actions">
+                        <button class="check-btn ${isCompleted ? 'completed' : ''}" onclick="toggleQuest('${quest.id}')">✓</button>
+                        <button class="delete-btn" onclick="deleteQuest('${quest.id}')">🗑️</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleQuest(id) {
+            const todayStr = getTodayStr();
+            if (!state.logs[todayStr]) state.logs[todayStr] = {};
+
+            const isCompleted = state.logs[todayStr][id];
+            if (isCompleted) {
+                delete state.logs[todayStr][id];
+                addGold(-10);
+            } else {
+                state.logs[todayStr][id] = true;
+                addGold(10);
+                addExp(10);
+                triggerConfetti();
+            }
+
+            renderQuests();
+            checkAchievements();
+            saveState();
+        }
+
+        function deleteQuest(id) {
+            if (confirm('習慣を削除しますか？')) {
+                state.quests = state.quests.filter(q => q.id !== id);
+                renderQuests();
+                saveState();
+            }
+        }
+
+        /* Modal Input Handlers & 曜日チェックボックス複数選択化 */
+        function handleFreqChange() {
+            const val = document.getElementById('select-freq-type').value;
+            const container = document.getElementById('freq-dynamic-input');
+            container.innerHTML = '';
+
+            if (val === 'days_per_week' || val === 'days_per_month') {
+                container.innerHTML = `<input type="number" id="freq-num-val" value="3" min="1" max="31" style="width: 80px;"><span style="align-self:center; font-size:12px;">日</span>`;
+            } else if (val === 'every_x_days') {
+                container.innerHTML = `<input type="number" id="freq-num-val" value="2" min="1" style="width: 80px;"><span style="align-self:center; font-size:12px;">日毎</span>`;
+            } else if (val === 'specific_day') {
+                const daysMap = [{id:1, name:'月'}, {id:2, name:'火'}, {id:3, name:'水'}, {id:4, name:'木'}, {id:5, name:'金'}, {id:6, name:'土'}, {id:0, name:'日'}];
+                let html = '<div class="checkbox-group" style="width:100%;">';
+                daysMap.forEach(d => {
+                    html += `<label class="checkbox-label"><input type="checkbox" name="target-weekday" value="${d.id}" checked> ${d.name}</label>`;
+                });
+                html += '</div>';
+                container.innerHTML = html;
+            }
+        }
+
+        function handleEndChange() {
+            const val = document.getElementById('select-end-type').value;
+            const container = document.getElementById('end-dynamic-input');
+            container.innerHTML = '';
+
+            if (val === 'until_date') {
+                container.innerHTML = `<input type="date" id="end-date-val">`;
+            } else if (val === 'total_count') {
+                container.innerHTML = `<input type="number" id="end-count-val" value="30" min="1" style="width: 80px;"><span style="align-self:center; font-size:12px;">回達成で終了</span>`;
+            }
+        }
+
+        function openQuestModal() { document.getElementById('quest-modal').style.display = 'flex'; }
+        function closeQuestModal() { document.getElementById('quest-modal').style.display = 'none'; }
+
+        function saveQuest() {
+            const icon = document.getElementById('input-icon').value || '✨';
+            const title = document.getElementById('input-title').value.trim();
+            const desc = document.getElementById('input-desc').value.trim();
+            const freqType = document.getElementById('select-freq-type').value;
+            const targetDaily = parseInt(document.getElementById('input-daily-target').value) || 1;
+            const endType = document.getElementById('select-end-type').value;
+
+            if (!title) return alert('名称を入力してください');
+
+            const color = HABIT_COLORS[state.quests.length % HABIT_COLORS.length];
+            state.quests.push({
+                id: 'q_' + Date.now(),
+                title, desc, icon, color,
+                freqType, targetDaily, endType
+            });
+
+            document.getElementById('input-title').value = '';
+            document.getElementById('input-desc').value = '';
+            closeQuestModal();
+            renderQuests();
+            saveState();
+        }
+
+        // --- STATS VIEW ---
+        function switchStatsTab(tab) {
+            state.statsTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderStats();
+        }
+
+        function renderStats() {
+            const container = document.getElementById('stats-content-area');
+            const summaryContainer = document.getElementById('stats-summary-cards');
+            const now = new Date();
+            container.innerHTML = '';
+            summaryContainer.innerHTML = '';
+
+            let totalChecks = 0;
+            Object.values(state.logs).forEach(log => totalChecks += Object.keys(log).length);
+
+            if (state.statsTab === 'week') {
+                const box = document.createElement('div');
+                box.className = 'stats-box';
+                const dayLabels = ['日', '月', '火', '水', '木', '金', '土'];
+                let html = `<div class="week-header-row"><div></div>`;
+                dayLabels.forEach(d => html += `<div>${d}</div>`);
+                html += `</div>`;
+
+                state.quests.forEach(quest => {
+                    html += `<div class="habit-stat-row"><div class="habit-stat-name"><span>${quest.icon}</span><span>${quest.title}</span></div>`;
+                    for (let i = 0; i < 7; i++) {
+                        const d = new Date();
+                        d.setDate(now.getDate() - now.getDay() + i);
+                        const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                        const isChecked = state.logs[dateStr] && state.logs[dateStr][quest.id];
+                        const style = isChecked ? `background-color: ${quest.color};` : '';
+                        html += `<div class="stat-dot" style="${style}"></div>`;
+                    }
+                    html += `</div>`;
+                });
+                box.innerHTML = html;
+                container.appendChild(box);
+
+            } else if (state.statsTab === 'month') {
+                const box = document.createElement('div');
+                box.className = 'stats-box';
+                const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+
+                state.quests.forEach(quest => {
+                    let html = `<div style="margin-bottom:12px;"><div class="habit-stat-name" style="margin-bottom:6px;"><span>${quest.icon}</span><span>${quest.title}</span></div><div style="display:grid; grid-template-columns:repeat(7, 1fr); gap:4px;">`;
+                    for (let day = 1; day <= daysInMonth; day++) {
+                        const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                        const isChecked = state.logs[dateStr] && state.logs[dateStr][quest.id];
+                        const style = isChecked ? `background-color: ${quest.color}; color:#fff;` : '';
+                        html += `<div class="stat-dot" style="${style}">${day}</div>`;
+                    }
+                    html += `</div></div>`;
+                    box.innerHTML += html;
+                });
+                container.appendChild(box);
+
+            } else if (state.statsTab === 'year') {
+                const box = document.createElement('div');
+                box.className = 'stats-box';
+
+                state.quests.forEach(quest => {
+                    let count = 0;
+                    Object.values(state.logs).forEach(log => { if (log[quest.id]) count++; });
+                    const rate = Math.min(100, Math.round((count / 365) * 100));
+
+                    let html = `<div style="margin-bottom:14px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                            <div class="habit-stat-name"><span>${quest.icon}</span><span>${quest.title}</span></div>
+                            <div style="color:var(--text-dim);">${rate}% | ${count}回</div>
+                        </div>
+                        <div class="year-grid">`;
+                    for (let i = 0; i < 100; i++) {
+                        const style = i < count ? `background-color: ${quest.color};` : '';
+                        html += `<div class="year-dot" style="${style}"></div>`;
+                    }
+                    html += `</div></div>`;
+                    box.innerHTML += html;
+                });
+                container.appendChild(box);
+
+            } else if (state.statsTab === 'all') {
+                const box = document.createElement('div');
+                box.className = 'stats-box';
+                let maxCount = 1;
+
+                state.quests.forEach(quest => {
+                    let count = 0;
+                    Object.values(state.logs).forEach(log => { if (log[quest.id]) count++; });
+                    if (count > maxCount) maxCount = count;
+                });
+
+                state.quests.forEach(quest => {
+                    let count = 0;
+                    Object.values(state.logs).forEach(log => { if (log[quest.id]) count++; });
+                    const percent = Math.round((count / maxCount) * 100);
+
+                    box.innerHTML += `
+                        <div class="alltime-bar-container">
+                            <div style="display:flex; justify-content:space-between; font-size:12px;">
+                                <div class="habit-stat-name"><span>${quest.icon}</span><span>${quest.title}</span></div>
+                                <div style="font-weight:bold; color:var(--accent-purple);">${count} 回</div>
+                            </div>
+                            <div class="alltime-bar-bg">
+                                <div class="alltime-bar-fill" style="width: ${percent}%; background-color: ${quest.color};"></div>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.appendChild(box);
+            }
+
+            summaryContainer.innerHTML = `
+                <div class="summary-card"><div class="summary-value">${totalChecks}回</div><div class="summary-label">総チェック</div></div>
+                <div class="summary-card"><div class="summary-value">${state.quests.length}個</div><div class="summary-label">習慣数</div></div>
+                <div class="summary-card"><div class="summary-value">${state.level}</div><div class="summary-label">現在のLv</div></div>
+            `;
+        }
+
+        // --- GACHA & 50 ACHIEVEMENTS ---
+        let totalGachaCount = 0; // セッション内またはトラッキング用
+
+        function drawGacha() {
+            if (state.gold < 100) return alert('ゴールドが不足しています (100G必要)');
+            addGold(-100);
+            totalGachaCount++;
+
+            const item = ITEMS[Math.floor(Math.random() * ITEMS.length)];
+            if (!state.inventory.includes(item.id)) state.inventory.push(item.id);
+
+            triggerConfetti();
+            alert(`🎉 GACHA GET!\n【${item.rarity}】${item.icon} ${item.name}`);
+            renderCollection();
+            checkAchievements();
+            saveState();
+        }
+
+        function renderCollection() {
+            const grid = document.getElementById('collection-grid');
+            grid.innerHTML = '';
+            document.getElementById('collection-count').innerText = state.inventory.length;
+
+            ITEMS.forEach(item => {
+                const isUnlocked = state.inventory.includes(item.id);
+                const div = document.createElement('div');
+                div.className = `collection-item ${isUnlocked ? '' : 'locked'}`;
+                div.innerHTML = `
+                    <span class="icon">${isUnlocked ? item.icon : '❓'}</span>
+                    <span class="name">${isUnlocked ? item.name : '???'}</span>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function checkAchievements() {
+            let totalChecks = 0;
+            Object.values(state.logs).forEach(log => totalChecks += Object.keys(log).length);
+
+            ACHIEVEMENTS.forEach(ach => {
+                if (state.unlockedAchievements.includes(ach.id)) return;
+
+                let unlocked = false;
+                if (ach.type === 'checks' && totalChecks >= ach.target) unlocked = true;
+                if (ach.type === 'level' && state.level >= ach.target) unlocked = true;
+                if (ach.type === 'gacha' && totalGachaCount >= ach.target) unlocked = true; // またはガチャ累計計算
+                if (ach.type === 'collection' && state.inventory.length >= ach.target) unlocked = true;
+                if (ach.type === 'achievements' && state.unlockedAchievements.length >= ach.target) unlocked = true;
+
+                if (unlocked) {
+                    state.unlockedAchievements.push(ach.id);
+                    addGold(ach.reward);
+                    triggerConfetti();
+                }
+            });
+
+            renderAchievements();
+            saveState();
+        }
+
+        function renderAchievements() {
+            const container = document.getElementById('achievement-list');
+            container.innerHTML = '';
+            document.getElementById('achievement-count').innerText = state.unlockedAchievements.length;
+
+            ACHIEVEMENTS.forEach(ach => {
+                const isUnlocked = state.unlockedAchievements.includes(ach.id);
+                const card = document.createElement('div');
+                card.className = 'quest-card';
+                card.style.borderColor = isUnlocked ? 'var(--gold-color)' : 'var(--border-color)';
+                card.innerHTML = `
+                    <div class="quest-left">
+                        <div class="quest-icon">${ach.icon}</div>
+                        <div>
+                            <div class="quest-title">${ach.title}</div>
+                            <div class="quest-desc">${ach.desc}</div>
+                        </div>
+                    </div>
+                    <div style="font-size:12px; color:var(--gold-color);">${isUnlocked ? '達成済' : `+${ach.reward}G`}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function triggerConfetti() {
+            if (typeof confetti === 'function') {
+                confetti({ particleCount: 40, spread: 60, origin: { y: 0.7 } });
+            }
+        }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
